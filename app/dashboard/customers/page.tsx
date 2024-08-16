@@ -24,6 +24,7 @@ export default async function Page({
   const currentPage = Number(searchParams?.page) || 1;
 
   const totalPages = await fetchCustomersPages(query);
+  console.log(totalPages)
 
   return (
     <div className="w-full">
@@ -32,7 +33,6 @@ export default async function Page({
       </div>
       <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
         <Search placeholder="Search customers..." />
-        <CreateInvoice />
       </div>
       <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
         <CustomersTable query={query} currentPage={currentPage} />

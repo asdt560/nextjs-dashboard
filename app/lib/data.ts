@@ -222,14 +222,12 @@ export async function fetchCustomersPages(query: string) {
   try {
     const count = await sql`SELECT COUNT(*)
     FROM customers
-    JOIN invoices ON invoices.customer_id = customers.id
     WHERE
       customers.name ILIKE ${`%${query}%`} OR
-      customers.email ILIKE ${`%${query}%`} OR
-      invoices.amount::text ILIKE ${`%${query}%`} OR
-      invoices.date::text ILIKE ${`%${query}%`} OR
-      invoices.status ILIKE ${`%${query}%`}
+      customers.email ILIKE ${`%${query}%`}
   `;
+
+    console.log(count)
 
     const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
     return totalPages;
