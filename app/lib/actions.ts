@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import { hash } from 'bcrypt';
  
 const FormSchema = z.object({
   id: z.string(),
@@ -107,6 +108,48 @@ export async function deleteInvoice(id: string) {
   } catch (error) {
     return { message: 'Database Error: Failed to Delete Invoice.' };
   }
+}
+
+const UserSchema = z.object({
+  email: z.string().email().min(1, {message: "Email is required"}),
+  password: z.string().min(6, { message: "Password minimal length is 6"}),
+})
+
+export type userState = {
+  errors?: {
+    email?: string[];
+    password?: string[];
+  };
+  message?: string | null;
+};
+
+
+export async function createUser(prevState: userState, formData: FormData) {
+  const validatedFields = UserSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password")
+  })
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create User.',
+    };
+  }
+
+  const {email, password} = validatedFields.data;
+
+  const hashedPassword = await hash(password, 10)
+  try {
+    await sql`
+      INSERT INTO users (email, password) 
+      VALUES (${email}, ${hashedPassword})
+    `;
+  } catch(error) {
+    return { message: 'Database Error: Failed to Create User.' };
+  }
+
+  redirect('/login')
 }
 
 export async function authenticate(
