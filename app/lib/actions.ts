@@ -111,12 +111,14 @@ export async function deleteInvoice(id: string) {
 }
 
 const UserSchema = z.object({
+  name: z.string().min(1, {message: "Username is required"}),
   email: z.string().email().min(1, {message: "Email is required"}),
   password: z.string().min(6, { message: "Password minimal length is 6"}),
 })
 
 export type userState = {
   errors?: {
+    name?: string[];
     email?: string[];
     password?: string[];
   };
@@ -126,6 +128,7 @@ export type userState = {
 
 export async function createUser(prevState: userState, formData: FormData) {
   const validatedFields = UserSchema.safeParse({
+    name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password")
   })
@@ -137,18 +140,21 @@ export async function createUser(prevState: userState, formData: FormData) {
     };
   }
 
-  const {email, password} = validatedFields.data;
+  const {name, email, password} = validatedFields.data;
 
   const hashedPassword = await hash(password, 10)
   try {
     await sql`
-      INSERT INTO users (email, password) 
-      VALUES (${email}, ${hashedPassword})
-    `;
+      INSERT INTO users (name, email, password) 
+      VALUES (${name}, ${email}, ${hashedPassword})
+    `
+      .then((result) => console.log(result))
   } catch(error) {
+    console.log(error)
     return { message: 'Database Error: Failed to Create User.' };
   }
 
+  revalidatePath('/login')
   redirect('/login')
 }
 
