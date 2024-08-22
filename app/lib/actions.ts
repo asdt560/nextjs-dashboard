@@ -114,6 +114,15 @@ const UserSchema = z.object({
   name: z.string().min(1, {message: "Username is required"}),
   email: z.string().email().min(1, {message: "Email is required"}),
   password: z.string().min(6, { message: "Password minimal length is 6"}),
+  confirmPassword: z.string().min(6)
+}).superRefine(({password, confirmPassword}, ctx) => {
+  if(confirmPassword !== password) {
+    ctx.addIssue({
+      code: "custom",
+      message: "The passwords do not match",
+      path: ['confirmPassword']
+    });
+  }
 })
 
 export type userState = {
@@ -121,6 +130,7 @@ export type userState = {
     name?: string[];
     email?: string[];
     password?: string[];
+    confirmPassword?: string[];
   };
   message?: string | null;
 };
